@@ -1,6 +1,6 @@
 # MlbStats
 
-**TODO: Add description**
+Compiles a day's worth of mlb pitch data and returns the count and average speed grouped by pitch type
 
 ## Installation
 
@@ -17,3 +17,10 @@ If [available in Hex](https://hex.pm/docs/publish), the package can be installed
         def application do
           [applications: [:mlb_stats]]
         end
+
+## Usage
+
+```
+stats = MlbStats.PitchCollector.compile("2015", "06", "09") # year, month, day
+=> [%{MlbStats.PitchCollector.PitchStats},%{MlbStats.PitchCollector.PitchStats},...]
+```
