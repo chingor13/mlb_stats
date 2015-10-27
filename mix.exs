@@ -28,8 +28,7 @@ defmodule MlbStats.Mixfile do
   # Type "mix help deps" for more examples and options
   defp deps do
     [
-      #{:gameday, git: "https://github.com/chingor13/gameday-elixir.git"}
-      {:gameday, path: "../gameday"}
+      {:gameday, git: "https://github.com/chingor13/gameday-elixir.git"}
     ]
   end
 end
