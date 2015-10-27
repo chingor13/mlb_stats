@@ -1,0 +1,2 @@
+defmodule MlbStats do
+end
