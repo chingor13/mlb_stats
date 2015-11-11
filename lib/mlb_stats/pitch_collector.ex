@@ -52,7 +52,7 @@ defmodule MlbStats.PitchCollector do
   """
   def compile(year, month, day) do
     Gameday.Game.list(year, month, day)
-      |> ok([])
+      |> ok
       |> queue_all(&compile_game/1)
       |> await_all
       |> merge
@@ -60,7 +60,7 @@ defmodule MlbStats.PitchCollector do
 
   def compile_game(gid) do
     Gameday.Game.fetch(gid)
-      |> ok
+      |> ok(%{pitches: []})
       |> Map.get(:pitches)
       |> Enum.group_by(&(Map.get(&1, :type)))
       |> compile_stats
