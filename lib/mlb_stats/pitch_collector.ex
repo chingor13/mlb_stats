@@ -68,7 +68,7 @@ defmodule MlbStats.PitchCollector do
   defp compile_stats(dict) do
     dict
       |> Enum.map(&combine_pitches/1)
-      |> Enum.into(%{})
+      |> Enum.reduce(%{}, fn (pitch_stat, acc) -> Map.put(acc, Map.get(pitch_stat, :name), pitch_stat) end)
   end
 
   defp combine_pitches({type, pitches}) do
