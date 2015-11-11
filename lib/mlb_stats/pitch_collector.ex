@@ -39,34 +39,15 @@ defmodule MlbStats.PitchCollector do
   Returns a Dict of "name" => PitchCollector.PitchStats
   """
   def compile(year, month) do
-    days_for_month(month)
+    days_for_month(year, month)
       |> queue_all(fn (day) -> compile(year, month, day) end)
       |> await_all
       |> merge
   end
 
-  defp days_for_month(month) do
-    1 .. days_in_month(month)
+  defp days_for_month(year, month) do
+    1 .. :calendar.last_day_of_the_month(String.to_integer(year), String.to_integer(month))
       |> Enum.map(fn(day) -> String.rjust("#{day}", 2, ?0) end)
-  end
-
-  defp days_in_month("02") do
-    28
-  end
-  defp days_in_month("04") do
-    30
-  end
-  defp days_in_month("06") do
-    30
-  end
-  defp days_in_month("09") do
-    30
-  end
-  defp days_in_month("11") do
-    30
-  end
-  defp days_in_month(_) do
-    31
   end
 
   @doc """
