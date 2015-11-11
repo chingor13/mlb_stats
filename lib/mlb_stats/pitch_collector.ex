@@ -22,13 +22,13 @@ defmodule MlbStats.PitchCollector do
     end
   end
 
-
   @doc """
   Compiles statistics for pitches for an entire year
   Returns a Dict of "name" => PitchCollector.PitchStats
   """
   def compile(year) do
-    ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]
+    1..12
+      |> Enum.map(fn(month) -> String.rjust("#{month}", 2, ?0) end)
       |> queue_all(fn (month) -> compile(year, month) end)
       |> await_all
       |> merge
@@ -39,11 +39,34 @@ defmodule MlbStats.PitchCollector do
   Returns a Dict of "name" => PitchCollector.PitchStats
   """
   def compile(year, month) do
-    # FIXME - get the days of the month
-    ["01", "02", "03"]
+    days_for_month(month)
       |> queue_all(fn (day) -> compile(year, month, day) end)
       |> await_all
       |> merge
+  end
+
+  defp days_for_month(month) do
+    1 .. days_in_month(month)
+      |> Enum.map(fn(day) -> String.rjust("#{day}", 2, ?0) end)
+  end
+
+  defp days_in_month("02") do
+    28
+  end
+  defp days_in_month("04") do
+    30
+  end
+  defp days_in_month("06") do
+    30
+  end
+  defp days_in_month("09") do
+    30
+  end
+  defp days_in_month("11") do
+    30
+  end
+  defp days_in_month(_) do
+    31
   end
 
   @doc """
@@ -51,6 +74,7 @@ defmodule MlbStats.PitchCollector do
   Returns a Dict of "name" => PitchCollector.PitchStats
   """
   def compile(year, month, day) do
+    IO.puts("compiling: #{year},#{month},#{day}")
     Gameday.Game.list(year, month, day)
       |> ok
       |> queue_all(&compile_game/1)
