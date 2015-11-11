@@ -28,7 +28,10 @@ defmodule MlbStats.PitchCollector do
   Returns a Dict of "name" => PitchCollector.PitchStats
   """
   def compile(year) do
-    # not yet implemented
+    ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]
+      |> queue_all(fn (month) -> compile(year, month) end)
+      |> await_all
+      |> merge
   end
 
   @doc """
@@ -36,7 +39,11 @@ defmodule MlbStats.PitchCollector do
   Returns a Dict of "name" => PitchCollector.PitchStats
   """
   def compile(year, month) do
-    # not yet implemented
+    # FIXME - get the days of the month
+    ["01", "02", "03"]
+      |> queue_all(fn (day) -> compile(year, month, day) end)
+      |> await_all
+      |> merge
   end
 
   @doc """
@@ -45,24 +52,37 @@ defmodule MlbStats.PitchCollector do
   """
   def compile(year, month, day) do
     Gameday.Game.list(year, month, day)
-      |> handle_games
-      |> Enum.map(&queue_fetch/1) # fetch and parse each game id in a different process
-      |> Enum.map(&Task.await/1) # wait for the results
-      |> Enum.map(fn({:ok, game}) -> game.pitches end)
-      |> List.flatten
-      |> Enum.group_by(fn(pitch) -> pitch.type end)
+      |> ok([])
+      |> queue_all(&compile_game/1)
+      |> await_all
+      |> merge
+  end
+
+  def compile_game(gid) do
+    Gameday.Game.fetch(gid)
+      |> ok
+      |> Map.get(:pitches)
+      |> Enum.group_by(&(Map.get(&1, :type)))
       |> compile_stats
   end
 
-  defp handle_games({:ok, gids}) do
-    gids
-  end
-  defp handle_games(_) do
-    []
+  defp queue_all(list, callback) do
+    Enum.map(list, fn(param) -> Task.async(fn -> callback.(param) end) end)
   end
 
-  defp queue_fetch(gid) do
-    Task.async(fn -> Gameday.Game.fetch(gid) end)
+  defp await_all(list) do
+    Enum.map(list, &Task.await/1)
+  end
+
+  defp merge(list_of_dicts) do
+    Enum.reduce(list_of_dicts, %{}, fn(pitch_stat, acc) -> acc = MlbStats.PitchCollector.PitchStats.merge(acc, pitch_stat) end)
+  end
+
+  defp ok({:ok, resp}, _) do
+    resp
+  end
+  defp ok(_, default \\ []) do
+    default
   end
 
   defp compile_stats(dict) do
@@ -79,14 +99,4 @@ defmodule MlbStats.PitchCollector do
     %PitchStats{name: type, count: count, average: average}
   end
 
-  defp compile_game(game) do
-    game.pitches
-      |> Enum.group_by(fn(pitch) -> pitch.type end)
-      |> compile_stats
-  end
-
-  defp reduce_stats(list_of_list_of_stats) do
-    list_of_list_of_stats
-      |> Enum.reduce
-  end
 end
