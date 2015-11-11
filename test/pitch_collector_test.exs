@@ -1,6 +1,7 @@
 defmodule PitchCollectorTest do
   use ExUnit.Case
 
+  @tag :external
   test "can compile stats" do
     stats = MlbStats.PitchCollector.compile("2015", "06", "09")
 
